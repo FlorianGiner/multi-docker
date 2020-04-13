@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t florianginer/react-test -f ./client/Dockerfile.dev ./client
+script:
+ - docker run -e CI=true florianginer/react-test npm test
+
+after_success:
+  - docker build -t florianginer/multi-client ./client
+  - docker build -t florianginer/multi-nginx ./nginx
+  - docker build -t florianginer/multi-server ./server
+  - docker build -t florianginer/multi-worker ./worker
+
+# log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# Take those images and push them to docker hub
+  - docker push florianginer/multi-client
+  - docker push florianginer/multi-nginx
+  - docker push florianginer/multi-server
+  - docker push florianginer/multi-worker
